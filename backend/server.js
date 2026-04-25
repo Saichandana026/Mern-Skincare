@@ -62,12 +62,12 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "products", // folder name in cloudinary
+    folder: "products", 
     allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage: storage });
 
 
 app.post("/upload", upload.single("image"), (req, res) => {
