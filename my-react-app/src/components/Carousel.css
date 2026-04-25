@@ -1,0 +1,76 @@
+.carousel {
+  position: relative;
+  width: 100%;
+  height: 60vh;
+  overflow: hidden;
+  margin: 0 auto;
+
+}
+
+.slide-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-content {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: black;
+  width: 100%;
+  font-size: 25px;
+   opacity: 0;                 /* start invisible */
+   animation: fadeUp 1s ease-out forwards;
+}
+
+.carousel-content h1 {
+  font-size: 60px;
+  margin: 15px 0;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 60%); /* off screen below */
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%); /* centered vertically */
+  }
+}
+
+.dots {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.dot {
+  height: 10px;
+  width: 10px;
+  margin: 0 6px;
+  background: gray;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.dot.active {
+  background: black;
+}
+
+.carousel .carousel-btn {
+  margin-top: 30px;
+  padding: 30px 40px;
+  font-size: 12px;
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  width: auto;
+}

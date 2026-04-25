@@ -1,0 +1,42 @@
+.mega-menu {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  width: 850px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+}
+
+.menu-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.menu-column h4 {
+  font-size: 17px;
+  color: #222;
+  margin-bottom: 15px;
+  font-weight: 600;
+  border-bottom: 2px solid #f2f2f2;
+  padding-bottom: 8px;
+}
+
+.menu-column a {
+  text-decoration: none;
+  color: #555;
+  font-size: 15px;
+  margin: 7px 0;
+  transition: all 0.3s ease;
+}
+
+.menu-column a:hover {
+  color: #ff4f8b;
+  padding-left: 6px;
+}
