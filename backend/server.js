@@ -1,5 +1,6 @@
 console.log("Server file loaded successfully");
 const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
@@ -8,7 +9,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const cors = require("cors");
-const multer = require("multer");
 const path = require("path");
 
 const Product = require("./models/Product");
@@ -284,7 +284,7 @@ app.post("/api/placeOrder", async (req, res) => {
     await order.save();
 
     console.log("Order Saved:", order);
-
+   
     const user = await User.findById(order.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
