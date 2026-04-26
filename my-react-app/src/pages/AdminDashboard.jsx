@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+
 import {
   BarChart,
   Bar,
@@ -32,6 +33,7 @@ function AdminDashboard() {
   const [signupData, setSignupData] = useState([]);
 
   const COLORS = ["#27ae60", "#e74c3c"];
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     loadDashboard();
@@ -39,7 +41,7 @@ function AdminDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/dashboard");
+      const res = await axios.get(`${backendUrl}/api/admin/dashboard`);
       
       setStats(res.data.stats);
       setSalesData(res.data.salesData);

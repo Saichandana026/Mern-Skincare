@@ -95,10 +95,7 @@ function Cart() {
               {cartItems.map((item) => (
                 <tr key={item.productId}>
                   <td className="item-info">
-                    <img
-                      src={`${backendUrl}/images/${item.image}`}
-                      alt={item.name}
-                    />
+                     <img src={item.image} alt={item.name} />
                     <span>{item.name}</span>
                   </td>
 

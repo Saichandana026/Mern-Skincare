@@ -1,4 +1,8 @@
 console.log("Server file loaded successfully");
+const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
+
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -9,6 +13,7 @@ const path = require("path");
 
 const Product = require("./models/Product");
 const authRoutes = require("./routes/auth");
+
 
 const app = express();
 
@@ -26,17 +31,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
-
+app.use(cors());
 app.use(express.json());
-
 const paymentRoutes = require("./routes/paymentRoutes");
 app.use("/api/payment", paymentRoutes);
-
-app.use("/images", express.static(path.join(__dirname, "public/images")));
 app.use("/api/auth", authRoutes);
 
 
@@ -50,36 +48,48 @@ mongoose.connect(process.env.MONGODB_URL)
 //   .then(() => console.log("MongoDB Connected"))
 //   .catch((err) => console.log(err));
 
-const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
 
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_API_SECRET
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+console.log("Cloudinary Config:");
+console.log(process.env.CLOUDINARY_CLOUD_NAME);
+console.log(process.env.CLOUDINARY_API_KEY);
+console.log(process.env.CLOUDINARY_API_SECRET);
 
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
-    folder: "products", 
+    folder: "products",
     allowed_formats: ["jpg", "png", "jpeg"],
+    transformation: [{ width: 500, height: 500, crop: "limit" }],
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
-
-app.post("/upload", upload.single("image"), (req, res) => {
+app.post("/upload", upload.single("image"), async (req, res) => {
   try {
+    console.log("FILE:", req.file);
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
     res.json({
-      image: req.file.path, 
+      image: req.file.path, // ✅ Cloudinary URL already here
     });
   } catch (err) {
-    console.error(err);
+    console.log("UPLOAD ERROR:", err);
     res.status(500).json({ message: "Upload failed" });
   }
 });
+
+
+
 
 app.post("/add-product", async (req, res) => {
   try {
@@ -232,7 +242,7 @@ app.delete("/cart/:userId", async (req, res) => {
   }
 });
 
-app.post("/placeOrder", async (req, res) => {
+app.post("/api/placeOrder", async (req, res) => {
   console.log("PLACE ORDER API HIT");
   console.log("Body:", req.body);
 
@@ -240,6 +250,7 @@ app.post("/placeOrder", async (req, res) => {
 
   try {
     const cart = await Cart.findOne({ userId });
+    console.log("USER ID RECEIVED:", userId);
 
     console.log("Cart Found:", cart);
 

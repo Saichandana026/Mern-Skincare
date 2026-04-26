@@ -107,11 +107,7 @@ const Profile = () => {
         <td>
           {order.items.map((item, index) => (
             <div key={index} className="order-item">
-              <img
-                src={`${backendUrl}/images/${item.image}`}
-                alt={item.name}
-                className="order-img"
-              />
+              <img src={item.image} alt={item.name} />
               <p>{item.name} (x{item.quantity})</p>
             </div>
           ))}

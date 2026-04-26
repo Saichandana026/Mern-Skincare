@@ -16,27 +16,34 @@ function AddProduct() {
   const [description, setDescription] = useState("");
 
   const handleUpload = async () => {
-    if (!file) {
-      alert("Please select image");
-      return;
-    }
+  if (!file) {
+    alert("Please select image");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("image", file);
+  const formData = new FormData();
+  formData.append("image", file);
 
-    try {
-      const res = await axios.post(
-        `${backendUrl}/upload`,
-        formData
-      );
+  try {
+    const res = await axios.post(
+      `${backendUrl}/upload`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
-      setImage(res.data.image);
-      alert("Image uploaded successfully");
-    } catch (err) {
-      console.log(err);
-      alert("Image upload failed");
-    }
-  };
+    console.log("UPLOAD RESPONSE:", res.data);
+
+    setImage(res.data.image);
+    alert("Image uploaded successfully");
+  } catch (err) {
+    console.log("UPLOAD ERROR:", err);
+    alert("Image upload failed");
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();

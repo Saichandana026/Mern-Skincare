@@ -24,6 +24,7 @@ router.post("/create-order", async (req, res) => {
     });
 
     res.json(order);
+    
 
   } catch (err) {
     res.status(500).json({ error: "Order creation failed" });
@@ -44,6 +45,7 @@ router.post("/verify", (req, res) => {
 
   if (generatedSignature === razorpay_signature) {
     return res.json({ success: true });
+    console.log("VERIFY BODY:", req.body);
   } else {
     return res.status(400).json({ success: false });
   }

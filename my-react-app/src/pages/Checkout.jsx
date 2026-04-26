@@ -76,25 +76,33 @@ function Checkout() {
     });
   };
 
-  const confirmOrder = async (paymentStatus = "Pending") => {
+const confirmOrder = async (paymentStatus = "Pending") => {
   try {
-    await axios.post(`${backendUrl}/placeOrder`, {
-      userId,
-      address: form,
-      paymentMethod: payment,
-      paymentStatus: paymentStatus,
+    await axios.post(`${backendUrl}/api/placeOrder`, {
+    userId,
+    address: form,
+    paymentMethod: payment,
+    paymentStatus,
+    email: user?.email 
     });
+
+    console.log("ORDER SUCCESS:", res.data);
 
     setCartItems([]);
     setShowReview(false);
-
     navigate("/order-success");
 
+    return res.data;
+
   } catch (err) {
-    console.log(err);
-    alert("Failed to place order");
+    // ✅ ADD THIS
+    console.log("❌ FULL ERROR:", err);
+    console.log("❌ RESPONSE:", err.response);
+    console.log("❌ DATA:", err.response?.data);
+
+    alert(err.response?.data?.message || err.message);
   }
-};
+}
 
   const handleRazorpayPayment = async () => {
     try {
@@ -114,26 +122,32 @@ function Checkout() {
         order_id: data.id,
 
         handler: async function (response) {
-        try {
-          console.log(response);
+  try {
+    console.log("STEP 1: Razorpay response", response);
 
-          const verifyRes = await axios.post(
-          `${backendUrl}/api/payment/verify`,
-           response
-          );
+    const verifyRes = await axios.post(
+      `${backendUrl}/api/payment/verify`,
+      response
+    );
 
-          if (verifyRes.data.success) {
-            await confirmOrder("Paid");
-            } else {
-            alert("Payment verification failed");
-          }
+    console.log("STEP 2: Verify response", verifyRes.data);
 
-          } catch (err) {
-            console.log(err);
-            alert("Verification failed");
-          }
-        },
-        
+    if (verifyRes.data.success) {
+      console.log("STEP 3: Verification success");
+
+      await confirmOrder("Paid");
+
+      console.log("STEP 4: Order placed");
+    } else {
+      console.log("STEP 3 FAILED");
+      alert("Payment verification failed");
+    }
+
+  } catch (err) {
+    console.log("❌ ERROR:", err.response?.data || err.message);
+    alert("Something failed after payment");
+  }
+},
         prefill: {
           name: form.fullName,
           contact: form.phone,
@@ -292,10 +306,8 @@ function Checkout() {
         ) : (
           cartItems.map((item) => (
             <div className="summary-item" key={item.productId}>
-              <img
-                src={`${backendUrl}/images/${item.image}`}
-                alt=""
-              />
+              <img src={item.image} alt={item.name} />
+
               <div>
                 <p>{item.name}</p>
                 <p>Qty: {item.quantity}</p>

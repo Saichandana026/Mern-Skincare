@@ -58,10 +58,11 @@ function Search() {
               className="product-card"
               onClick={() => navigate(`/product/${item._id}`)}
             >
-              <img
-                src={`${backendUrl}/images/${item.image}`} 
+               <img
+                src={item.image}
                 alt={item.name}
               />
+
               <h4>{item.name}</h4>
               <p>₹{item.price}</p>
             </div>

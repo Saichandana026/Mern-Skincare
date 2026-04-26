@@ -59,11 +59,10 @@ function ManageProduct() {
           {products.map((product) => (
             <tr key={product._id}>
               <td>
-                <img
-                  src={`${backendUrl}/images/${product.image}`}
-                  alt={product.name}
-                  width="70"
-                />
+               <img
+                src={product.image}
+                alt={product.name}
+              />
               </td>
 
               <td>{product.name}</td>

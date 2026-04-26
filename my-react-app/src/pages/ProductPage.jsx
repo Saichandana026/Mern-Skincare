@@ -52,9 +52,9 @@ function ProductPage() {
     <div className="product-page-container">
       <div className="product-image-section">
         <img
-          src={`${backendUrl}/images/${product.image}`}
-          alt={product.name}
-          className="main-product-image"
+        src={product.image}
+        alt={product.name}
+        style={{ width: "80%" }}
         />
       </div>
 
