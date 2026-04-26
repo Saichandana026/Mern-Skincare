@@ -78,13 +78,13 @@ function Checkout() {
 
 const confirmOrder = async (paymentStatus = "Pending") => {
   try {
-    await axios.post(`${backendUrl}/api/placeOrder`, {
-    userId,
-    address: form,
-    paymentMethod: payment,
-    paymentStatus,
-    email: user?.email 
-    });
+    const res = await axios.post(`${backendUrl}/api/placeOrder`, {
+  userId,
+  address: form,
+  paymentMethod: payment,
+  paymentStatus,
+  email: user?.email 
+  });
 
     console.log("ORDER SUCCESS:", res.data);
 
