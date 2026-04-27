@@ -5,7 +5,7 @@ import "./Checkout.css";
 
 function Checkout() {
   console.log("NEW BUILD DEPLOYED"); 
-  const backendUrl = "https://mern-skincare-backend-j9vb.onrender.com";
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
