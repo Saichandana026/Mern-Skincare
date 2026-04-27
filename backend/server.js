@@ -22,12 +22,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 const cors = require("cors");
 const path = require("path");
 
-require("dotenv").config();
+
 
 app.use(cors());
 app.use(express.json());
