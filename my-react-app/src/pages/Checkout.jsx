@@ -5,7 +5,7 @@ import "./Checkout.css";
 
 function Checkout() {
   console.log("NEW BUILD DEPLOYED"); 
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
