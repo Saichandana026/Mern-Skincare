@@ -38,18 +38,23 @@ router.post("/verify", (req, res) => {
     razorpay_signature
   } = req.body;
 
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ error: "Missing payment details" });
+  }
+
   const generatedSignature = crypto
-    .createHmac("sha256", "in1xV77zn4puDfmzD3O3s3J5")
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
     .update(razorpay_order_id + "|" + razorpay_payment_id)
     .digest("hex");
 
   if (generatedSignature === razorpay_signature) {
-    return res.json({ success: true });
     console.log("VERIFY BODY:", req.body);
+    return res.json({ success: true });
   } else {
     return res.status(400).json({ success: false });
   }
 });
+
 
 
 module.exports = router;

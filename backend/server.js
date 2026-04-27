@@ -4,18 +4,9 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
-require("dotenv").config();
-const express = require("express");
 const mongoose = require("mongoose");
-
-const cors = require("cors");
-const path = require("path");
-
 const Product = require("./models/Product");
 const authRoutes = require("./routes/auth");
-
-
-const app = express();
 
 const nodemailer = require("nodemailer");
 const User = require("./models/User");
@@ -31,11 +22,20 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+const express = require("express");
+const app = express();
+const cors = require("cors");
+const path = require("path");
+
+require("dotenv").config();
+
 app.use(cors());
 app.use(express.json());
+
 const paymentRoutes = require("./routes/paymentRoutes");
 app.use("/api/payment", paymentRoutes);
 app.use("/api/auth", authRoutes);
+
 
 
 mongoose.connect(process.env.MONGODB_URL)
