@@ -242,7 +242,7 @@ app.delete("/cart/:userId", async (req, res) => {
   }
 });
 
-app.post("/placeOrder", async (req, res) => {
+app.post("/api/placeOrder", async (req, res) => {
   console.log("PLACE ORDER API HIT");
   console.log("Body:", req.body);
 
