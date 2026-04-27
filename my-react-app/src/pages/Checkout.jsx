@@ -4,8 +4,11 @@ import axios from "axios";
 import "./Checkout.css";
 
 function Checkout() {
+ 
   console.log("NEW BUILD DEPLOYED"); 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  console.log("BACKEND URL:", backendUrl);
+
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
