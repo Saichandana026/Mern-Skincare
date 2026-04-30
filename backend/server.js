@@ -23,7 +23,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-require("dotenv").config();
 
 const express = require("express");
 const app = express();
@@ -326,43 +325,43 @@ app.get("/admin-orders", async (req, res) => {
 app.put("/update-order/:id", async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     order.status = status;
     await order.save();
-   
-    const user = await User.findById(order.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const mailOptions = {
-      from: '"Skincare" <saichandana2604@gmail.com>',
-      to: user.email,
-      subject: "Order Status Updated",
-      html: `
-        <h2>Order Update</h2>
-        <p>Hello ${user.name},</p>
-        <p>Your order status has been updated.</p>
-        <p><strong>Status:</strong> ${status}</p>
-        <p>Thank you for shopping with us!</p>
-      `,
-    };
+    // Send email separately so it doesn't block response
+    try {
+      const user = await User.findById(order.userId);
+      if (user && user.email) {
+        const mailOptions = {
+          from: '"Skincare" <saichandana2604@gmail.com>',
+          to: user.email,
+          subject: "Order Status Updated",
+          html: `
+            <h2>Order Update</h2>
+            <p>Hello ${user.name},</p>
+            <p>Your order status has been updated to: <strong>${status}</strong></p>
+            <p>Thank you for shopping with us!</p>
+          `,
+        };
+        await transporter.sendMail(mailOptions);
+        console.log("Email sent to:", user.email);
+      }
+    } catch (emailErr) {
+      console.log("Email failed:", emailErr.message);
+    }
 
-    await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully");
+    // ✅ Always send response
+    res.json({ message: "Order updated successfully" });
 
-   // res.json({ message: "Order updated and email sent successfully" });
-
-  } //catch (err) {
-    //console.error("Error updating order:", err);
-    //res.status(500).json({ message: "Error updating order" });
-  //}
-  catch(emailErr){
-    console.log("Email failed but order saved:", emailErr.message);
+  } catch (err) {
+    console.error("Error updating order:", err);
+    res.status(500).json({ message: "Error updating order" });
   }
-}
-);
+});
 
 app.delete("/delete-order/:id", async (req, res) => {
   try {
