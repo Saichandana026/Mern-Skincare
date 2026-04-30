@@ -94,16 +94,11 @@ const confirmOrder = async (paymentStatus = "Pending") => {
 
     setCartItems([]);
     setShowReview(false);
-    navigate("/order-success");
 
     return res.data;
 
   } catch (err) {
-    
-    console.log(" FULL ERROR:", err);
-    console.log(" RESPONSE:", err.response);
-    console.log(" DATA:", err.response?.data);
-
+ 
     alert(err.response?.data?.message || err.message);
   }
 }
@@ -141,14 +136,17 @@ const confirmOrder = async (paymentStatus = "Pending") => {
 
       await confirmOrder("Paid");
 
+      navigate("/order-success");
+
       console.log("STEP 4: Order placed");
+
     } else {
       console.log("STEP 3 FAILED");
       alert("Payment verification failed");
     }
 
   } catch (err) {
-    console.log("❌ ERROR:", err.response?.data || err.message);
+    console.log(" ERROR:", err.response?.data || err.message);
     alert("Something failed after payment");
   }
 },
@@ -287,6 +285,7 @@ const confirmOrder = async (paymentStatus = "Pending") => {
 
                     if (payment === "Cash on Delivery") {
                       confirmOrder("Pending");
+                      navigate("/order-success");
                     } else {
                       handleRazorpayPayment();
                     }

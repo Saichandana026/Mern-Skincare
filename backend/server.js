@@ -4,6 +4,7 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
+require("dotenv").config();
 const mongoose = require("mongoose");
 const Product = require("./models/Product");
 const authRoutes = require("./routes/auth");
