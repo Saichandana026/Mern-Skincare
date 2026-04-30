@@ -99,10 +99,10 @@ const confirmOrder = async (paymentStatus = "Pending") => {
     return res.data;
 
   } catch (err) {
-    // ✅ ADD THIS
-    console.log("❌ FULL ERROR:", err);
-    console.log("❌ RESPONSE:", err.response);
-    console.log("❌ DATA:", err.response?.data);
+    
+    console.log(" FULL ERROR:", err);
+    console.log(" RESPONSE:", err.response);
+    console.log(" DATA:", err.response?.data);
 
     alert(err.response?.data?.message || err.message);
   }

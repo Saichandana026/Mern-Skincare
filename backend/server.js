@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "saichandana2604@gmail.com",
-    pass: "swtl jifh plql xnjv" 
+    pass: process.env.GMAIL_PASS
   }
 });
 
@@ -82,7 +82,7 @@ app.post("/upload", upload.single("image"), async (req, res) => {
     }
 
     res.json({
-      image: req.file.path, // ✅ Cloudinary URL already here
+      image: req.file.path,
     });
   } catch (err) {
     console.log("UPLOAD ERROR:", err);
@@ -358,14 +358,19 @@ app.put("/update-order/:id", async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully");
 
-    res.json({ message: "Order updated and email sent successfully" });
+   // res.json({ message: "Order updated and email sent successfully" });
 
-  } catch (err) {
-    console.error("Error updating order:", err);
-    res.status(500).json({ message: "Error updating order" });
+  } //catch (err) {
+    //console.error("Error updating order:", err);
+    //res.status(500).json({ message: "Error updating order" });
+  //}
+  catch(emailErr){
+    console.log("Email failed but order saved:", emailErr.message);
   }
-});
+}
+);
 
 app.delete("/delete-order/:id", async (req, res) => {
   try {
