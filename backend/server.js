@@ -245,33 +245,20 @@ app.delete("/cart/:userId", async (req, res) => {
 });
 
 app.post("/api/placeOrder", async (req, res) => {
-  console.log("PLACE ORDER API HIT");
-  console.log("Body:", req.body);
-
   const { userId, address, paymentMethod, email } = req.body;
 
   try {
     const cart = await Cart.findOne({ userId });
-    console.log("USER ID RECEIVED:", userId);
-
-    console.log("Cart Found:", cart);
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
     const total = cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
+      (sum, item) => sum + item.price * item.quantity, 0
     );
 
-    let paymentStatus;
-
-    if (paymentMethod === "Online Payment") {
-      paymentStatus = "Paid";
-    } else {
-      paymentStatus = "Pending"; 
-    }
+    const paymentStatus = paymentMethod === "Online Payment" ? "Paid" : "Pending";
 
     const order = new Order({
       userId,
@@ -285,33 +272,37 @@ app.post("/api/placeOrder", async (req, res) => {
 
     await order.save();
 
-    console.log("Order Saved:", order);
-   
-    const user = await User.findById(order.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const mailOptions = {
-      from: '"Skincare" <saichandana2604@gmail.com>',
-      to: user.email,
-      subject: "Order Confirmation",
-      html: `
-        <h2>Order Placed Successfully </h2>
-        <p>Hello ${user.name},</p>
-        <p>Your order has been placed.</p>
-        <p><b>Total Amount:</b> ${total}</p>
-        <p><b>Payment Method:</b> ${paymentMethod}</p>
-        <p><b>Address:</b>  ${order.address.address},${order.address.phone}, ${order.address.pincode}</p>
-        <p>Thank you for shopping with us!</p>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    console.log("Email sent successfully");
-
+    // Clear cart immediately after saving order
     await Cart.findOneAndDelete({ userId });
 
-    res.json({ message: "Order placed & email sent successfully" });
+    // Send email separately - won't crash order if it fails
+    try {
+      const mongoose = require("mongoose");
+      const objectId = new mongoose.Types.ObjectId(userId);
+      const user = await User.findById(objectId);
+
+      if (user && user.email) {
+        const mailOptions = {
+          from: '"Skincare" <saichandana2604@gmail.com>',
+          to: user.email,
+          subject: "Order Confirmation",
+          html: `
+            <h2>Order Placed Successfully</h2>
+            <p>Hello ${user.name},</p>
+            <p>Your order has been placed.</p>
+            <p><b>Total Amount:</b> ₹${total}</p>
+            <p><b>Payment Method:</b> ${paymentMethod}</p>
+            <p>Thank you for shopping with us!</p>
+          `,
+        };
+        await transporter.sendMail(mailOptions);
+        console.log("Email sent successfully");
+      }
+    } catch (emailErr) {
+      console.log("Email failed (order still saved):", emailErr.message);
+    }
+
+    res.json({ message: "Order placed successfully" });
 
   } catch (err) {
     console.error("ORDER ERROR:", err);
