@@ -137,6 +137,7 @@ const confirmOrder = async (paymentStatus = "Pending") => {
       await confirmOrder("Paid");
 
       navigate("/order-success");
+      alert("Payment successful and order placed"); 
 
       console.log("STEP 4: Order placed");
 
