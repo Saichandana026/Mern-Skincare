@@ -3,6 +3,7 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
+const PDFDocument = require("pdfkit");  
 
 require("dotenv").config();
 const mongoose = require("mongoose");
@@ -18,7 +19,7 @@ const Cart = require("./models/Cart");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "saichandana2604@gmail.com",
+    user: process.env.GMAIL_NAME,
     pass: process.env.GMAIL_PASS
   }
 });
@@ -41,7 +42,11 @@ app.use("/api/auth", authRoutes);
 
 
 mongoose.connect(process.env.MONGODB_URL)
-  .then(() => console.log("MongoDB Connected"))
+  .then(() => {
+    console.log("MongoDB Connected");
+    console.log("MONGODB_URL:", process.env.MONGODB_URL); 
+  }
+)
   .catch((err) => console.log("MongoDB connection error:", err));
 
 
@@ -72,6 +77,113 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage });
+
+
+
+function generateGSTInvoice(order, user) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40 });
+    const buffers = [];
+
+    doc.on("data", (chunk) => buffers.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+    doc.on("error", reject);
+
+    const GST_RATE = 0.18;
+    const CGST_RATE = 0.09;
+    const SGST_RATE = 0.09;
+
+    const invoiceNo = `INV-${order._id.toString().slice(-6).toUpperCase()}`;
+    const date = new Date(order.createdAt).toLocaleDateString("en-IN");
+
+
+    doc
+      .fontSize(18)
+      .text("SKINCARE", { align: "center" })
+      .fontSize(12)
+      .text("GST INVOICE", { align: "center" })
+      .moveDown();
+
+    
+    doc.fontSize(10);
+
+    doc.text(`Invoice No: ${invoiceNo}`, 40, 100);
+    doc.text(`Date: ${date}`, 40, 115);
+    doc.text(`Payment: ${order.paymentMethod}`, 40, 130);
+
+    doc.text(`Customer: ${user.name}`, 300, 100);
+    doc.text(`Phone: ${order.address.phone}`, 300, 115);
+    doc.text(`Address: ${order.address.address}`, 300, 130);
+
+    doc.moveDown(3);
+
+  
+    const tableTop = 180;
+
+    doc
+      .font("Helvetica-Bold")
+      .text("No", 40, tableTop)
+      .text("Product", 80, tableTop)
+      .text("Qty", 250, tableTop)
+      .text("Price", 300, tableTop)
+      .text("Total", 400, tableTop);
+
+    doc.moveTo(40, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+
+    let y = tableTop + 25;
+    let subtotal = 0;
+
+    doc.font("Helvetica");
+
+    order.items.forEach((item, index) => {
+      const total = item.price * item.quantity;
+      subtotal += total;
+
+      doc.text(index + 1, 40, y);
+      doc.text(item.name, 80, y, { width: 150 });
+      doc.text(item.quantity, 250, y);
+      doc.text(`Rs.${item.price}`, 300, y);
+      doc.text(`Rs.${total}`, 400, y);
+
+      y += 20;
+    });
+
+    doc.moveTo(40, y).lineTo(550, y).stroke();
+
+  
+    const taxable = subtotal / (1 + GST_RATE);
+    const cgst = taxable * CGST_RATE;
+    const sgst = taxable * SGST_RATE;
+
+    y += 20;
+
+    doc.text(`Subtotal: Rs.${subtotal.toFixed(2)}`, 350, y);
+    y += 15;
+    doc.text(`Taxable: Rs.${taxable.toFixed(2)}`, 350, y);
+    y += 15;
+    doc.text(`CGST (9%): Rs.${cgst.toFixed(2)}`, 350, y);
+    y += 15;
+    doc.text(`SGST (9%): Rs.${sgst.toFixed(2)}`, 350, y);
+
+    y += 25;
+
+    doc
+      .font("Helvetica-Bold")
+      .text(`Grand Total: Rs.${order.totalAmount.toFixed(2)}`, 350, y);
+
+   
+    doc.moveDown(3);
+    doc
+      .font("Helvetica")
+      .fontSize(9)
+      .text("Thank you for your purchase!", { align: "center" })
+      .text("This is a computer-generated invoice.", { align: "center" });
+
+    doc.end();
+  });
+}
+
+module.exports = { generateGSTInvoice };
 
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
@@ -244,72 +356,100 @@ app.delete("/cart/:userId", async (req, res) => {
   }
 });
 
-app.post("/api/placeOrder", async (req, res) => {
-  const { userId, address, paymentMethod, email } = req.body;
+  app.post("/api/placeOrder", async (req, res) => {
+  console.log("Place Order API Called");
+
+  const { userId, address, paymentMethod } = req.body;
 
   try {
+
     const cart = await Cart.findOne({ userId });
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    const total = cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity, 0
-    );
+    let totalAmount = 0;
+    cart.items.forEach(item => {
+      totalAmount += item.price * item.quantity;
+    });
 
-    const paymentStatus = paymentMethod === "Online Payment" ? "Paid" : "Pending";
 
-    const order = new Order({
+    let paymentStatus = paymentMethod === "Online Payment" ? "Paid" : "Pending";
+
+
+    const newOrder = new Order({
       userId,
       items: cart.items,
       address,
       paymentMethod,
       paymentStatus,
-      totalAmount: total,
+      totalAmount,
       status: "Placed"
     });
 
-    await order.save();
+    await newOrder.save();
+    console.log("Order saved:", newOrder._id);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // Clear cart immediately after saving order
+
+    let invoiceBuffer = null;
+    try {
+      invoiceBuffer = await generateGSTInvoice(newOrder, user);
+    } catch (error) {
+      console.log("Invoice generation failed");
+    }
+
+    const invoiceNo = `INV-${newOrder._id.toString().slice(-8).toUpperCase()}`;
+
+    // 7. Send email
+    await transporter.sendMail({
+      from: '"Skincare" <your-email@gmail.com>',
+      to: user.email,
+      subject: `Order Confirmation - ${invoiceNo}`,
+      html: `
+        <h2>Order Placed Successfully</h2>
+        <p>Hello ${user.name},</p>
+        <p>Your order has been placed.</p>
+        <p><b>Invoice:</b> ${invoiceNo}</p>
+        <p><b>Total:</b> Rs. ${totalAmount}</p>
+        <p><b>Payment:</b> ${paymentMethod}</p>
+      `,
+      attachments: invoiceBuffer
+        ? [
+            {
+              filename: `${invoiceNo}.pdf`,
+              content: invoiceBuffer
+            }
+          ]
+        : []
+    });
+
+    console.log("Email sent");
+
+
     await Cart.findOneAndDelete({ userId });
 
-    // Send email separately - won't crash order if it fails
-    try {
-      const mongoose = require("mongoose");
-      const objectId = new mongoose.Types.ObjectId(userId);
-      const user = await User.findById(objectId);
-
-      if (user && user.email) {
-        const mailOptions = {
-          from: '"Skincare" <saichandana2604@gmail.com>',
-          to: user.email,
-          subject: "Order Confirmation",
-          html: `
-            <h2>Order Placed Successfully</h2>
-            <p>Hello ${user.name},</p>
-            <p>Your order has been placed.</p>
-            <p><b>Total Amount:</b> ₹${total}</p>
-            <p><b>Payment Method:</b> ${paymentMethod}</p>
-            <p>Thank you for shopping with us!</p>
-          `,
-        };
-        await transporter.sendMail(mailOptions);
-        console.log("Email sent successfully");
-      }
-    } catch (emailErr) {
-      console.log("Email failed (order still saved):", emailErr.message);
-    }
 
     res.json({ message: "Order placed successfully" });
 
-  } catch (err) {
-    console.error("ORDER ERROR:", err);
-    res.status(500).json({ message: "Order failed" });
+  } catch (error) {
+    console.error("Error placing order:", error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 });
 
+app.get("/admin-orders", async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching orders" });
+  }
+});
 
 
 app.get("/admin-orders", async (req, res) => {
@@ -325,37 +465,32 @@ app.get("/admin-orders", async (req, res) => {
 app.put("/update-order/:id", async (req, res) => {
   try {
     const { status } = req.body;
-
+    
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     order.status = status;
     await order.save();
+   
+    const user = await User.findById(order.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Send email separately so it doesn't block response
-    try {
-      const user = await User.findById(order.userId);
-      if (user && user.email) {
-        const mailOptions = {
-          from: '"Skincare" <saichandana2604@gmail.com>',
-          to: user.email,
-          subject: "Order Status Updated",
-          html: `
-            <h2>Order Update</h2>
-            <p>Hello ${user.name},</p>
-            <p>Your order status has been updated to: <strong>${status}</strong></p>
-            <p>Thank you for shopping with us!</p>
-          `,
-        };
-        await transporter.sendMail(mailOptions);
-        console.log("Email sent to:", user.email);
-      }
-    } catch (emailErr) {
-      console.log("Email failed:", emailErr.message);
-    }
+    const mailOptions = {
+      from: '"Skincare" <saichandana026@gmail.com>',
+      to: user.email,
+      subject: "Order Status Updated",
+      html: `
+        <h2>Order Update</h2>
+        <p>Hello ${user.name},</p>
+        <p>Your order status has been updated.</p>
+        <p><strong>Status:</strong> ${status}</p>
+        <p>Thank you for shopping with us!</p>
+      `,
+    };
 
-    // ✅ Always send response
-    res.json({ message: "Order updated successfully" });
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: "Order updated and email sent successfully" });
 
   } catch (err) {
     console.error("Error updating order:", err);
@@ -363,20 +498,6 @@ app.put("/update-order/:id", async (req, res) => {
   }
 });
 
-app.delete("/delete-order/:id", async (req, res) => {
-  try {
-    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
-
-    if (!deletedOrder) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    res.json({ message: "Order deleted successfully" });
-  } catch (err) {
-    console.error("Delete order error:", err);
-    res.status(500).json({ message: "Delete failed" });
-  }
-});
 
 app.get("/search", async (req, res) => {
   try {

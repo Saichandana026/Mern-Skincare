@@ -14,6 +14,7 @@ function AddProduct() {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [gstRate, setGstRate] = useState("18"); 
 
   const handleUpload = async () => {
   if (!file) {
@@ -63,6 +64,7 @@ function AddProduct() {
           quantity: Number(quantity),
           price: Number(price),
           description,
+          gstRate: Number(gstRate)
         }
       );
 
@@ -134,6 +136,13 @@ function AddProduct() {
             onChange={(e) => setDescription(e.target.value)}
             required
           />
+
+          <input 
+          type="number"
+          placeholder="GST Rate (default 18%)"
+          className="form-field"
+          onChange={(e) => setGstRate(e.target.value)}
+          />  
 
           <button type="submit">SUBMIT</button>
         </form>
