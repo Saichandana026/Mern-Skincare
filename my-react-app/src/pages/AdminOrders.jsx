@@ -74,9 +74,11 @@ function AdminOrders() {
                 <td>{order.userId}</td>
 
                 <td>
-                  {order.address?.fullName || "N/A"} <br />
-                  {order.address?.address || "N/A"} <br />
-                  {order.address?.city || "N/A"}
+                  {order.address?.fullName && <div>{order.address.fullName}</div>}
+                  {order.address?.address && <div>{order.address.address}</div>}
+                  {order.address?.city && <div>{order.address.city}</div>}
+                  {!order.address?.fullName && !order.address?.address && !order.address?.city && "No address"}
+                  {order.address?.phone && <div>{order.address.phone}</div>}
                 </td>
 
                 <td>
@@ -87,7 +89,7 @@ function AdminOrders() {
                   ))}
                 </td>
 
-                <td>${order.totalAmount}</td>
+                <td>₹{order.totalAmount?.toFixed(2)}</td>
 
                 <td>{order.paymentMethod}</td>
 
@@ -103,7 +105,7 @@ function AdminOrders() {
                       handleStatusChange(order._id, e.target.value)
                     }
                   >
-                    <option value="Placed">Placed</option>
+                    <option value="Pending">Pending</option>
                     <option value="Shipped">Shipped</option>
                     <option value="Out of Delivery">Out of Delivery</option>
                     <option value="Delivered">Delivered</option>

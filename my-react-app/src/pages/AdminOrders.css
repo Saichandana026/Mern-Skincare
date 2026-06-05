@@ -1,89 +1,108 @@
 .admin-orders {
-  padding: 20px;
+  padding: 30px;
+  background: #f8f9fb;
+  min-height: 100vh;
 }
 
 .admin-orders h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1f2d3d;
+  letter-spacing: 1px;
 }
 
 .orders-table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-}
-
-.orders-table th {
-  background-color: #2c3e50;
-  color: white;
-  padding: 12px;
-  text-align: left;
-}
-
-.orders-table td {
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
-  vertical-align: top;
-}
-
-.orders-table tr:hover {
-  background-color: #f5f5f5;
-}
-
-
-.status-badge {
-  background-color: #27ae60;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 12px;
-}
-.admin-orders {
-  padding: 20px;
-}
-
-.orders-table {
-  width: 100%;
-  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 .orders-table th {
   background: #2f3e4e;
   color: white;
-  padding: 10px;
+  padding: 18px 14px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
 }
 
 .orders-table td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  padding: 16px 14px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.orders-table tr:hover {
+  background: #f4f8fc;
+  transition: 0.3s ease;
+}
+
+.orders-table tr:last-child td {
+  border-bottom: none;
 }
 
 .status {
-  background: green;
+  background: #27ae60;
   color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .status-change {
-  background: green;
+  background: #0a8f08;
   color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
 }
 
-
-
-.delete-btn{
-  height:40px;
-  width:90px;
-  padding:15px 0;
-  border:none;
-  color:white;
-  font-size:12px;
-  cursor:pointer;
-  border-radius:5px;
-  text-decoration:none;
-  text-align:center;
+.status-change:hover {
+  background: #087507;
 }
 
+.delete-btn {
+  background: #e74c3c;
+  height: 42px;
+  width: 95px;
+  border: none;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s ease;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+}
+
+td div {
+  margin-bottom: 4px;
+}
+
+td div:last-child {
+  margin-bottom: 0;
+}

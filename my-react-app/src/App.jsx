@@ -71,7 +71,16 @@ function App() {
           <Route path="/add-product" element={<AddProduct />} />
           <Route path="/manage-products" element={<ManageProduct />} />
           <Route path="/update-product/:id" element={<UpdateProduct/>}/>
-          <Route path="/product/:id" element={<ProductPage />} />
+          <Route
+            path="/product/:id"
+            element={
+              <>
+                <Navigator />
+                <ProductPage />
+                <Footer />
+              </>
+            }
+          />
 
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />

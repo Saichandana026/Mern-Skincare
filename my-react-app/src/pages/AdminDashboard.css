@@ -22,7 +22,6 @@ body {
   margin-bottom: 30px;
 }
 
-/* Cards */
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

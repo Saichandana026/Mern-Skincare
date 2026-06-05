@@ -7,8 +7,10 @@ function Login() {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
 
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,13 +54,24 @@ function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
+          <div className="password-container">
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <div className="show-password">
+            <input
+              type="checkbox"
+              id="showPass"
+              onChange={() => setShowPassword(!showPassword)}
+            />
+            <label htmlFor="showPass">Show</label>
+          </div>
+        </div>
 
           <button type="submit">LOG IN</button>
         </form>

@@ -17,6 +17,7 @@ router.post("/create-order", async (req, res) => {
       return res.status(400).json({ error: "Invalid amount" });
     }
 
+
     const order = await razorpay.orders.create({
       amount: amount * 100,
       currency: "INR",

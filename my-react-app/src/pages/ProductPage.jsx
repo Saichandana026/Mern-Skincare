@@ -21,8 +21,19 @@ function ProductPage() {
   if (!product) return <p>Loading product...</p>;
 
   const user = JSON.parse(localStorage.getItem("user"));
+
+
+  //add to cart
   const handleAddToCart = async () => {
   try {
+      if (quantity > product.quantity) {
+        alert(`Only ${product.quantity} items available`);
+        return;
+      }
+      if (product.quantity === 0) {
+        alert("Out of stock");
+        return;
+      }
     const res = await axios.post(`${backendUrl}/addToCart`, {
       userId: user?.userId,
       productId: product._id,
@@ -30,16 +41,14 @@ function ProductPage() {
       price: product.price,
       image: product.image,
       quantity: quantity,
+      gstRate: product.gstRate
     });
-
     if (res.status === 200 || res.status === 201) {
       alert("Added to cart");
-  
       setTimeout(() => {
         window.dispatchEvent(new Event("cartUpdated"));
       }, 200);
     }
-
   } catch (err) {
     console.log(err);
     alert("Something went wrong");
@@ -62,7 +71,7 @@ function ProductPage() {
         <h1>{product.name}</h1>
         <h3>{product.category}</h3>
 
-        <p className="product-price">${product.price}</p>
+        <p className="product-price">₹{product.price?.toFixed(2)}</p>
 
         <div className="product-actions">
           <label>
@@ -70,10 +79,18 @@ function ProductPage() {
             <input
               type="number"
               min="1"
+              max={product.quantity}   
               value={quantity}
-              onChange={(e) =>
-                setQuantity(Math.max(1, Number(e.target.value)))
-              }
+              onChange={(e) => {
+                const val = Number(e.target.value);
+
+                if (val > product.quantity) {
+                  alert(`Only ${product.quantity} available`);
+                  return;
+                }
+
+                setQuantity(Math.max(1, val));
+              }}
             />
           </label>
 

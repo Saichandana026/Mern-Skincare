@@ -1,7 +1,9 @@
 console.log("Server file loaded successfully");
 const multer = require("multer");
+
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
+
 const fs = require("fs");
 const PDFDocument = require("pdfkit");  
 
@@ -47,7 +49,7 @@ mongoose.connect(process.env.MONGODB_URL)
     console.log("MONGODB_URL:", process.env.MONGODB_URL); 
   }
 )
-  .catch((err) => console.log("MongoDB connection error:", err));
+.catch((err) => console.log("MongoDB connection error:", err));
 
 
 // mongoose
@@ -82,103 +84,181 @@ const upload = multer({ storage });
 
 function generateGSTInvoice(order, user) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
     const buffers = [];
 
     doc.on("data", (chunk) => buffers.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.on("error", reject);
 
-    const GST_RATE = 0.18;
-    const CGST_RATE = 0.09;
-    const SGST_RATE = 0.09;
-
-    const invoiceNo = `INV-${order._id.toString().slice(-6).toUpperCase()}`;
-    const date = new Date(order.createdAt).toLocaleDateString("en-IN");
-
-
-    doc
-      .fontSize(18)
-      .text("SKINCARE", { align: "center" })
-      .fontSize(12)
-      .text("GST INVOICE", { align: "center" })
-      .moveDown();
-
-    
-    doc.fontSize(10);
-
-    doc.text(`Invoice No: ${invoiceNo}`, 40, 100);
-    doc.text(`Date: ${date}`, 40, 115);
-    doc.text(`Payment: ${order.paymentMethod}`, 40, 130);
-
-    doc.text(`Customer: ${user.name}`, 300, 100);
-    doc.text(`Phone: ${order.address.phone}`, 300, 115);
-    doc.text(`Address: ${order.address.address}`, 300, 130);
-
-    doc.moveDown(3);
-
   
-    const tableTop = 180;
+    const invoiceNo = `INV-${order._id.toString().slice(-8).toUpperCase()}`;
+    const date      = new Date(order.createdAt).toLocaleDateString("en-IN");
+    const pageW     = 595 - 80; 
 
-    doc
-      .font("Helvetica-Bold")
-      .text("No", 40, tableTop)
-      .text("Product", 80, tableTop)
-      .text("Qty", 250, tableTop)
-      .text("Price", 300, tableTop)
-      .text("Total", 400, tableTop);
+    //header
+    doc.fontSize(20).font("Helvetica-Bold").text("SKINCARE", 40, 40);
 
-    doc.moveTo(40, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+    doc.fontSize(9).font("Helvetica")
+      .text("Corporate Office:",        400, 40)
+      .text("Skincare Pvt Ltd",         400, 52)
+      .text("Mangalore, Karnataka, India",         400, 64)
 
-    let y = tableTop + 25;
-    let subtotal = 0;
+    // divider
+    doc.moveTo(40, 118).lineTo(555, 118).lineWidth(1).stroke();
+
+    //RECEIPT TITLE
+    doc.fontSize(13).font("Helvetica-Bold").text("OFFICIAL RECEIPT", 40, 128);
+
+    //  (two columns)
+    doc.fontSize(9).font("Helvetica-Bold");
+    const col1x = 40, col2x = 310, metaY = 152;
+    const lineH = 14;
+
+    // Left column
+    doc.text("Invoice #:",   col1x, metaY);
+    doc.text("Order ID:",    col1x, metaY + lineH);
+    doc.text("Date:",        col1x, metaY + lineH * 2);
+    doc.text("Payment:",     col1x, metaY + lineH * 3);
+    doc.text("Status:",      col1x, metaY + lineH * 4);
 
     doc.font("Helvetica");
+    doc.text(invoiceNo,                   col1x + 65, metaY);
+    doc.text(order._id.toString(),        col1x + 65, metaY + lineH,    { width: 200 });
+    doc.text(date,                        col1x + 65, metaY + lineH * 2);
+    doc.text(order.paymentMethod || "COD",col1x + 65, metaY + lineH * 3);
+    doc.text(order.status || "Pending",   col1x + 65, metaY + lineH * 4);
 
-    order.items.forEach((item, index) => {
-      const total = item.price * item.quantity;
-      subtotal += total;
+    // Right column
+    doc.font("Helvetica-Bold");
+    doc.text("Shipping:",      col2x, metaY);
+    doc.text("Estimated:",     col2x, metaY + lineH);
+    doc.text("Shipping Cost:", col2x, metaY + lineH * 2);
+    doc.text("Phone:",         col2x, metaY + lineH * 3);
 
-      doc.text(index + 1, 40, y);
-      doc.text(item.name, 80, y, { width: 150 });
-      doc.text(item.quantity, 250, y);
-      doc.text(`Rs.${item.price}`, 300, y);
-      doc.text(`Rs.${total}`, 400, y);
+    doc.font("Helvetica");
+    doc.text("Standard Delivery",    col2x + 80, metaY);
+    doc.text("3-5 Days",             col2x + 80, metaY + lineH);
+    doc.text("Free",                 col2x + 80, metaY + lineH * 2);
+    doc.text("+91 8152861670",       col2x + 80, metaY + lineH * 3);
 
-      y += 20;
+    // divider
+    const afterMetaY = metaY + lineH * 6 + 8;
+    doc.moveTo(40, afterMetaY).lineTo(555, afterMetaY).lineWidth(0.5).stroke();
+
+    //  ADDRESS
+    const billY = afterMetaY + 10;
+    doc.fontSize(9).font("Helvetica-Bold").text("Billed To:", 40, billY);
+    doc.font("Helvetica")
+      .text(user.name || "Customer",                                   40, billY + 13)
+      .text(order.address?.address || "",                              40, billY + 26, { width: 300 })
+      .text(`Phone: ${order.address?.phone || ""}`,                   40, billY + 50);
+
+    // divider
+    const tableStartY = billY + 68;
+    doc.moveTo(40, tableStartY).lineTo(555, tableStartY).lineWidth(0.5).stroke();
+
+    // TABLE HEADER 
+    const cols = {
+      item:  { x: 40,  w: 170 },
+      qty:   { x: 215, w: 35  },
+      price: { x: 255, w: 55  },
+      base:  { x: 315, w: 55  },
+      cgst:  { x: 375, w: 45  },
+      sgst:  { x: 425, w: 45  },
+      total: { x: 475, w: 55  },
+    };
+
+    const thY = tableStartY + 8;
+    doc.fontSize(9).font("Helvetica-Bold");
+    doc.text("Item",  cols.item.x,  thY, { width: cols.item.w });
+    doc.text("Qty",   cols.qty.x,   thY, { width: cols.qty.w,   align: "center" });
+    doc.text("Price", cols.price.x, thY, { width: cols.price.w, align: "right"  });
+    doc.text("Base",  cols.base.x,  thY, { width: cols.base.w,  align: "right"  });
+    doc.text("CGST",  cols.cgst.x,  thY, { width: cols.cgst.w,  align: "right"  });
+    doc.text("SGST",  cols.sgst.x,  thY, { width: cols.sgst.w,  align: "right"  });
+    doc.text("Total", cols.total.x, thY, { width: cols.total.w, align: "right"  });
+
+    doc.moveTo(40, thY + 16).lineTo(555, thY + 16).lineWidth(0.5).stroke();
+
+    // TABLE ROWS
+    let rowY    = thY + 24;
+    let subtotal = 0;
+
+    doc.font("Helvetica").fontSize(9);
+
+    order.items.forEach((item) => {
+    const qty = item.quantity || 1;
+    const price = item.price || 0;
+
+    const base = price * qty;
+
+    const gstRate = item.gstRate || 0; 
+
+    const gst = (base * gstRate) / 100;
+    const cgst = gst / 2;
+    const sgst = gst / 2;
+
+    const total = base + gst;
+
+    subtotal += total;
+
+      doc.text(item.name,            cols.item.x,  rowY, { width: cols.item.w });
+      doc.text(String(qty),          cols.qty.x,   rowY, { width: cols.qty.w,   align: "center" });
+      doc.text(price.toFixed(2),     cols.price.x, rowY, { width: cols.price.w, align: "right"  });
+      doc.text(base.toFixed(2),      cols.base.x,  rowY, { width: cols.base.w,  align: "right"  });
+      doc.text(cgst.toFixed(2),      cols.cgst.x,  rowY, { width: cols.cgst.w,  align: "right"  });
+      doc.text(sgst.toFixed(2),      cols.sgst.x,  rowY, { width: cols.sgst.w,  align: "right"  });
+      doc.text(total.toFixed(2),     cols.total.x, rowY, { width: cols.total.w, align: "right"  });
+
+      rowY += 20;
     });
 
-    doc.moveTo(40, y).lineTo(550, y).stroke();
+    doc.moveTo(40, rowY).lineTo(555, rowY).lineWidth(0.5).stroke();
 
-  
-    const taxable = subtotal / (1 + GST_RATE);
-    const cgst = taxable * CGST_RATE;
-    const sgst = taxable * SGST_RATE;
-
-    y += 20;
-
-    doc.text(`Subtotal: Rs.${subtotal.toFixed(2)}`, 350, y);
-    y += 15;
-    doc.text(`Taxable: Rs.${taxable.toFixed(2)}`, 350, y);
-    y += 15;
-    doc.text(`CGST (9%): Rs.${cgst.toFixed(2)}`, 350, y);
-    y += 15;
-    doc.text(`SGST (9%): Rs.${sgst.toFixed(2)}`, 350, y);
-
-    y += 25;
-
-    doc
-      .font("Helvetica-Bold")
-      .text(`Grand Total: Rs.${order.totalAmount.toFixed(2)}`, 350, y);
-
+    // TOTALS 
    
-    doc.moveDown(3);
-    doc
-      .font("Helvetica")
-      .fontSize(9)
-      .text("Thank you for your purchase!", { align: "center" })
-      .text("This is a computer-generated invoice.", { align: "center" });
 
+  let taxable = 0;
+  let totalGST = 0;
+
+  order.items.forEach(item => {
+    const base = item.price * item.quantity;
+    const gst = (base * (item.gstRate || 0)) / 100;
+
+    taxable += base;
+    totalGST += gst;
+  });
+
+    const totLabelX = 360, totValX = 460, totValW = 80;
+
+    rowY += 14;
+    doc.fontSize(9).font("Helvetica");
+    doc.text("Taxable Subtotal:",    totLabelX, rowY);
+    doc.text(`Rs.${taxable.toFixed(2)}`,  totValX, rowY, { width: totValW, align: "right" });
+
+    rowY += 14;
+    doc.text("Total Tax (GST):", totLabelX, rowY);
+    doc.text(`Rs.${totalGST.toFixed(2)}`, totValX, rowY, { width: totValW, align: "right" });
+
+    rowY += 14;
+    doc.text("Shipping:",            totLabelX, rowY);
+    doc.text("FREE",                 totValX,   rowY, { width: totValW, align: "right" });
+
+    rowY += 18;
+    doc.moveTo(355, rowY).lineTo(555, rowY).lineWidth(0.5).stroke();
+    rowY += 10;
+
+    doc.fontSize(11).font("Helvetica-Bold");
+    doc.text("Grand Total:",              totLabelX, rowY);
+    doc.text(`Rs.${subtotal.toFixed(2)}`, totValX,   rowY, { width: totValW, align: "right" });
+
+    // FOOTER 
+    doc.moveTo(40, rowY + 40).lineTo(555, rowY + 40).lineWidth(0.5).stroke();
+
+    doc.fontSize(9).font("Helvetica")
+      .text("Thank you for shopping with Skincare!", 40, rowY + 50, { align: "center", width: pageW });
+     
     doc.end();
   });
 }
@@ -257,7 +337,7 @@ app.delete("/delete-product/:id", async (req, res) => {
 });
 
 app.post("/addToCart", async (req, res) => {
-  const { productId, name, price, image, quantity, userId } = req.body;
+  const { productId, name, price, image, quantity, userId, gstRate } = req.body;
 
   try {
     let cart = await Cart.findOne({ userId });
@@ -265,7 +345,7 @@ app.post("/addToCart", async (req, res) => {
     if (!cart) {
       cart = new Cart({
         userId,
-        items: [{ productId, name, price, image, quantity }],
+        items: [{ productId, name, price, image, quantity, gstRate }],
       });
     } else {
       const existingItem = cart.items.find(
@@ -275,7 +355,7 @@ app.post("/addToCart", async (req, res) => {
       if (existingItem) {
         existingItem.quantity += quantity;
       } else {
-        cart.items.push({ productId, name, price, image, quantity });
+        cart.items.push({ productId, name, price, image, quantity, gstRate });
       }
     }
 
@@ -369,12 +449,36 @@ app.delete("/cart/:userId", async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    let totalAmount = 0;
+
+    for (const item of cart.items) {
+          const product = await Product.findById(item.productId);
+
+          if (!product || product.quantity === 0) {
+            return res.status(400).json({
+              message: `${product?.name || "Product"} is out of stock`
+            });
+          }
+
+          if (product.quantity < item.quantity) {
+            return res.status(400).json({
+              message: `Only ${product.quantity} items available for ${product.name}`
+            });
+          }
+        }
+
+
+    let subtotal = 0;
+    let totalGST = 0;
+
     cart.items.forEach(item => {
-      totalAmount += item.price * item.quantity;
+      const itemTotal = item.price * item.quantity;
+      const gst = (itemTotal * (item.gstRate || 0)) / 100;
+
+      subtotal += itemTotal;
+      totalGST += gst;
     });
 
-
+    const grandTotal = subtotal + totalGST;
     let paymentStatus = paymentMethod === "Online Payment" ? "Paid" : "Pending";
 
 
@@ -384,57 +488,76 @@ app.delete("/cart/:userId", async (req, res) => {
       address,
       paymentMethod,
       paymentStatus,
-      totalAmount,
-      status: "Placed"
+      totalAmount: grandTotal,
+      totalGST,
+      status: "Pending"
     });
 
     await newOrder.save();
+
+    for (const item of cart.items) {
+      const product = await Product.findById(item.productId);
+
+      if (!product) continue;
+
+     
+      if (product.quantity < item.quantity) {
+        return res.status(400).json({
+          message: `${product.name} is out of stock`
+        });
+      }
+
+
+      product.quantity -= item.quantity;
+      await product.save();
+    }
+
+    cart.items = [];
+    await cart.save();
+
+  
     console.log("Order saved:", newOrder._id);
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-
+   
     let invoiceBuffer = null;
     try {
       invoiceBuffer = await generateGSTInvoice(newOrder, user);
     } catch (error) {
-      console.log("Invoice generation failed");
+      console.log("Invoice generation failed:", error.message);
     }
 
     const invoiceNo = `INV-${newOrder._id.toString().slice(-8).toUpperCase()}`;
 
-    // 7. Send email
-    await transporter.sendMail({
-      from: '"Skincare" <your-email@gmail.com>',
-      to: user.email,
-      subject: `Order Confirmation - ${invoiceNo}`,
-      html: `
-        <h2>Order Placed Successfully</h2>
-        <p>Hello ${user.name},</p>
-        <p>Your order has been placed.</p>
-        <p><b>Invoice:</b> ${invoiceNo}</p>
-        <p><b>Total:</b> Rs. ${totalAmount}</p>
-        <p><b>Payment:</b> ${paymentMethod}</p>
-      `,
-      attachments: invoiceBuffer
-        ? [
-            {
-              filename: `${invoiceNo}.pdf`,
-              content: invoiceBuffer
-            }
-          ]
-        : []
-    });
+  
+    try {
+      await transporter.sendMail({
+        from: '"Skincare" <saichandana026@gmail.com>',
+        to: user.email,
+        subject: `Order Confirmation - ${invoiceNo}`,
+        html: `
+          <h2>Order Placed Successfully</h2>
+          <p>Hello ${user.name},</p>
+          <p>Your order has been placed.</p>
+          <p><b>Invoice:</b> ${invoiceNo}</p>
+          <p><b>Total:</b> Rs. ${grandTotal.toFixed(2)}</p>
+          <p><b>Payment:</b> ${paymentMethod}</p>
+        `,
+        attachments: invoiceBuffer
+          ? [{ filename: `${invoiceNo}.pdf`, content: invoiceBuffer }]
+          : []
+      });
+      console.log("Email sent to:", user.email);
+    } catch (mailErr) {
+      console.error("Email sending failed:", mailErr.message);
+      
+    }
 
-    console.log("Email sent");
-
-
-    await Cart.findOneAndDelete({ userId });
-
-
-    res.json({ message: "Order placed successfully" });
+    
+    res.json({ success: true, message: "Order placed successfully" });
 
   } catch (error) {
     console.error("Error placing order:", error);

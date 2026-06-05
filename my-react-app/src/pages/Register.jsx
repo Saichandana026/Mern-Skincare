@@ -10,9 +10,21 @@ function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  if (!passwordRegex.test(password)) {
+    alert(
+      "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character."
+    );
+    return;
+  }
+
 
     try {
       const res = await axios.post(
@@ -50,12 +62,35 @@ function Register() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
+          <div className="password-container">
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             required
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <div className="show-password">
+            <input
+              type="checkbox"
+              id="showPass"
+              onChange={() => setShowPassword(!showPassword)}
+            />
+            <label htmlFor="showPass">Show</label>
+          </div>
+        </div>
+
+        <p
+        style={{
+          fontSize: "12px",
+          color: "#666",
+          marginTop: "5px"
+        }}
+      >
+        Password must contain 8+ characters, uppercase, lowercase,
+        number and special character.
+      </p>
 
           <button type="submit">REGISTER</button>
         </form>

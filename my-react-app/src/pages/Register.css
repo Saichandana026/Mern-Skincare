@@ -43,6 +43,33 @@ body {
   font-size: 15px;
 }
 
+.password-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-container input {
+  width: 100%;
+  padding-right: 80px; 
+}
+
+.show-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  background: transparent;
+}
+
+.show-password input {
+  cursor: pointer;
+}
+
+
 .register-box button {
   width: 100%;
   padding: 16px;

@@ -46,6 +46,33 @@ input {
   border: 1px solid #ccc;
 }
 
+
+.password-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-container input {
+  width: 100%;
+  padding-right: 80px;
+}
+
+.show-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  background: transparent;
+}
+
+.show-password input {
+  cursor: pointer;
+}
+
 .forgot {
   display: block;
   text-align: left;
@@ -80,3 +107,4 @@ button:hover {
   color: black;
   text-decoration: none;
 }
+

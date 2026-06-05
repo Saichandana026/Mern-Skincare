@@ -113,7 +113,7 @@ const Profile = () => {
           ))}
         </td>
 
-        <td>${order.totalAmount}</td>
+        <td>₹{order.totalAmount?.toFixed(2)}</td>
         <td>{order.paymentStatus}</td>
         <td>{order.status}</td>
         <td>

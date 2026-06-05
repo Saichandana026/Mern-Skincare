@@ -6,8 +6,8 @@ import "./Home.css";
 function Home() {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(null);     
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     axios.get(`${backendUrl}/products`)
@@ -22,13 +22,12 @@ function Home() {
       });
   }, []);
 
-
   return (
-    <div className="home-container">
+    <div className="home-container" id="products-section">
       <h2 className="product-title">OUR PRODUCTS</h2>
+
       <div className="product-grid">
         {products.map((product) => (
-         
           <ProductCard key={product._id} product={product} />
         ))}
       </div>

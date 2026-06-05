@@ -58,7 +58,7 @@ function AdminDashboard() {
   };
 
   const paymentData = [
-    { name: "Received", value: stats.totalPayment },
+    { name: "Received", value: Number(stats.totalPayment.toFixed(2)) },
     { name: "Pending", value: 0 }
   ];
 
@@ -98,7 +98,7 @@ function AdminDashboard() {
 
         <div className="card">
           <h3>Payments</h3>
-          <p>₹{stats.totalPayment}</p>
+          <p>₹{Number(stats.totalPayment.toFixed(2))}</p>
         </div>
 
         <div className="card">

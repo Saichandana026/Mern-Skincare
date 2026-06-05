@@ -14,7 +14,11 @@ function Checkout() {
   const [loading, setLoading] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [payment, setPayment] = useState("");
-  const [processingPayment, setProcessingPayment] = useState(false); // NEW
+  const [processingPayment, setProcessingPayment] = useState(false);
+
+  const [subtotal, setSubtotal] = useState(0);
+  const [totalGST, setTotalGST] = useState(0);
+  const [grandTotal, setGrandTotal] = useState(0);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -36,7 +40,9 @@ function Checkout() {
     const fetchCart = async () => {
       try {
         const res = await axios.get(`${backendUrl}/cart/${userId}`);
-        setCartItems(res.data.items || []);
+        const items = res.data.items || [];
+        setCartItems(items);
+        calculateTotals(items);
       } catch (err) {
         console.log(err);
       } finally {
@@ -49,20 +55,29 @@ function Checkout() {
   }, [userId]);
 
 
-  const getItemGST = (item) => {
-    const rate = item.gstRate || 18;
-    return (item.price * item.quantity * rate) / 100;
+  const calculateTotals = (items) => {
+    let sub = 0;
+    let gstTotal = 0;
+
+    items.forEach((item) => {
+      const itemTotal = item.price * item.quantity;
+
+     
+      const gst = (itemTotal * (item.gstRate || 0)) / 100;
+
+      sub += itemTotal;
+      gstTotal += gst;
+    });
+
+    setSubtotal(sub);
+    setTotalGST(gstTotal);
+    setGrandTotal(sub + gstTotal);
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity, 0
-  );
-
-  const totalGST = cartItems.reduce(
-    (sum, item) => sum + getItemGST(item), 0
-  );
-
-  const grandTotal = subtotal + totalGST;
+  const getItemGST = (item) => {
+  const itemTotal = item.price * item.quantity;
+  return (itemTotal * (item.gstRate || 0)) / 100;
+};
 
 
   const handlePlaceOrder = () => {
@@ -98,7 +113,7 @@ function Checkout() {
         paymentMethod: payment,
         paymentStatus,
         totalGST,
-        grandTotal,
+        totalAmount: grandTotal,
         email: user?.email
       });
 
@@ -250,13 +265,21 @@ function Checkout() {
               <div className="review-box">
                 <h4>Products</h4>
 
-                {cartItems.map((item) => (
-                  <div className="review-item" key={item.productId}>
-                    <span>{item.name}</span>
-                    <span>x{item.quantity}</span>
-                    <span>₹{item.price * item.quantity}</span>
-                  </div>
-                ))}
+               {cartItems.map((item, index) => {
+                  const itemTotal = item.price * item.quantity;
+                  const gst = (itemTotal * (item.gstRate ?? 0)) / 100;
+                  const final = itemTotal + gst;
+
+                return (
+                  <div className="product-row" key={index}>
+                  <span className="p-name">{item.name}</span>
+                  <span>₹{item.price}</span>
+                  <span>Qty: {item.quantity}</span>
+                  <span>GST ({item.gstRate ?? 0}%): ₹{gst.toFixed(2)}</span>
+                  <span className="p-total">₹{final.toFixed(2)}</span>
+                </div>
+                  );
+                })}
 
                 <hr />
 
@@ -269,7 +292,7 @@ function Checkout() {
                 {cartItems.map((item) => (
                   <div className="review-total" key={item.productId + "_gst"}
                     style={{ fontSize: "13px", color: "gray" }}>
-                    <span>GST ({item.gstRate || 18}%) on {item.name}</span>
+                    <span>GST ({item.gstRate ?? 0}%) on {item.name}</span>
                     <span>₹{getItemGST(item).toFixed(2)}</span>
                   </div>
                 ))}
@@ -330,8 +353,13 @@ function Checkout() {
                       return;
                     }
                     if (payment === "Cash on Delivery") {
-                      await confirmOrder("Pending");
-                      navigate("/order-success"); 
+                      const result = await confirmOrder("Pending");
+
+                      if (result?.success) {
+                        alert("Order Confirmed Successfully. Payment is Pending (Cash on Delivery).");
+                        navigate("/");
+                      }
+
                     } else {
                       handleRazorpayPayment();
                     }
@@ -377,7 +405,7 @@ function Checkout() {
         {cartItems.map((item) => (
           <div className="price-row" key={item.productId + "_gst"}
             style={{ fontSize: "13px", color: "gray" }}>
-            <span>GST ({item.gstRate || 18}%) — {item.name}</span>
+            <span>GST ({item.gstRate ?? 0}%) — {item.name}</span>
             <span>₹{getItemGST(item).toFixed(2)}</span>
           </div>
         ))}

@@ -35,7 +35,10 @@ function Carousel({ data }) {
 
         <button
           className="carousel-btn"
-          onClick={() => navigate("/ProductCard")}
+          onClick={() => {
+          const section = document.getElementById("products-section");
+          section?.scrollIntoView({ behavior: "smooth" });
+        }}
         >
           SHOP NOW
         </button>

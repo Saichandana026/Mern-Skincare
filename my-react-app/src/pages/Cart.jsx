@@ -4,6 +4,8 @@ import "./Cart.css";
 import { useNavigate } from "react-router-dom";
 
 function Cart() {
+
+
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
@@ -27,10 +29,16 @@ function Cart() {
 
   const increaseQty = async (item) => {
     try {
+        if (item.quantity >= item.stock) {
+        alert(`Only ${item.stock} items available`);
+        return;
+      }
+      
       await axios.put(
         `${backendUrl}/cart/${userId}/${item.productId}`,
         { quantity: item.quantity + 1 }
       );
+      
       fetchCart();
     } catch (err) {
       console.log(err);

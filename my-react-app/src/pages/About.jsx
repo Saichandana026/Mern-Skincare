@@ -41,7 +41,7 @@ function About() {
 
         <h2>Contact Us</h2>
         <p>
-          Office Address: C‑16, Pamposh Enclave, New Delhi <br />
+          Office Address: Mangalore, Karnataka ,India<br />
           Working Hours: Mon – Fri : 10am – 7pm <br />
           Email: info@example.com
         </p>

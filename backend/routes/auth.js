@@ -10,7 +10,20 @@ router.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
 
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json("User already exists");
+    if (user) {
+      return res.status(400).json("User already exists");
+    }
+
+   
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character."
+      });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -24,6 +37,7 @@ router.post("/register", async (req, res) => {
     await user.save();
 
     res.status(201).json("User Registered Successfully");
+
   } catch (err) {
     res.status(500).json(err.message);
   }

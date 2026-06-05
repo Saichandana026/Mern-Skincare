@@ -9,6 +9,7 @@ const CartSchema = new mongoose.Schema({
       price: Number,
       image: String,
       quantity: Number,
+      gstRate: Number
     },
   ],
 });
